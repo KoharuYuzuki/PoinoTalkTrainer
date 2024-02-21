@@ -1,0 +1,12 @@
+src/poinotalktrainer/__pycache__/*
+.venv/*
+
+lab/*.lab
+wav/*.wav
+
+model_js/*
+model_py/*
+
+config.json
+
+.DS_Store
