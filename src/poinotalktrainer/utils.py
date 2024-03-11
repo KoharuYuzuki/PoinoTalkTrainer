@@ -116,7 +116,8 @@ def detect_f0(
 
 def detect_volume(
   wave: NDArray,
-  fs: float
+  fs: float,
+  min_volume: float
 ) -> NDArray:
   seg_len = int(fs * 0.01)
   hop_len = seg_len // 4
@@ -124,6 +125,8 @@ def detect_volume(
   seguments = seq2seg(wave, seg_len, hop_len, apply_window=True)
   for segument in seguments:
     volume = np.max(np.abs(segument))
+    if volume < min_volume:
+      volume = min_volume
     segument.fill(volume)
   seguments *= np.hanning(seg_len)
 
@@ -275,6 +278,7 @@ def gen_dataset(
   f0_envelope_mag: float,
   f0_envelope_len: int,
   f0_normalization_max: float,
+  volume_min: float,
   volume_envelope_len: int,
   is_mono: bool
 ) -> tuple[
@@ -411,7 +415,7 @@ def gen_dataset(
 
     f0_envelope = resample(f0_envelope, len(wave))
 
-    volume_envelope = detect_volume(wave, fs)
+    volume_envelope = detect_volume(wave, fs, volume_min)
 
     prev_sec = 0
     accents = []
@@ -506,6 +510,7 @@ def load_data(
       config['f0_envelope_mag'],
       config['f0_envelope_len'],
       config['f0_normalization_max'],
+      config['volume_min'],
       config['volume_envelope_len'],
       True
     )

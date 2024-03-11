@@ -22,6 +22,7 @@
   "f0_model_save_dir_for_py":       "model_py/f0",       // str:              F0エンベロープ推論モデル 保存ディレクトリパス (python)
   "f0_model_save_dir_for_js":       "model_js/f0",       // str:              F0エンベロープ推論モデル 保存ディレクトリパス (javascript)
 
+  "volume_min":                     0.0,                 // float:            最小音量
   "volume_envelope_len":            32,                  // int:              音量エンベロープの長さ
   "volume_model_mid_layer_units":   512,                 // int:              音量エンベロープ推論モデル 中間層ユニット数
   "volume_model_epochs":            10,                  // int:              音量エンベロープ推論モデル エポック数
