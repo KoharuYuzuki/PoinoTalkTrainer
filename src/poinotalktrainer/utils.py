@@ -270,6 +270,7 @@ def gen_dataset(
   fs: float,
   duration_mag_all: float,
   duration_mag_phonemes: dict,
+  duration_mag_indices: list,
   f0_envelope_offset: float,
   f0_envelope_mag: float,
   f0_envelope_len: int,
@@ -451,6 +452,9 @@ def gen_dataset(
     bool_array = phoneme_number == number
     durations[bool_array] *= mag
 
+  for (index, mag) in duration_mag_indices:
+    durations[index] *= mag
+
   durations *= duration_mag_all
 
   phoneme_number_seguments = seq2seg(
@@ -497,6 +501,7 @@ def load_data(
       config['wav_fs'],
       config['duration_mag_all'],
       config['duration_mag_phonemes'],
+      config['duration_mag_indices'],
       config['f0_envelope_offset'],
       config['f0_envelope_mag'],
       config['f0_envelope_len'],

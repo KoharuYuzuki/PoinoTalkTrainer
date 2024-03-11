@@ -5,6 +5,7 @@
 
   "duration_mag_all":               1.0,                 // float:            継続帳の倍率 (すべてに適用)
   "duration_mag_phonemes":          { "a": 1.0 },        // dict[str, float]: 継続帳の倍率 (音素別に適用)
+  "duration_mag_indices":           [[0, 1.0]],          // list[int, float]: 継続帳の倍率 (音素インデックス別に適用)
   "duration_model_mid_layer_units": 512,                 // int:              継続長推論モデル 中間層ユニット数
   "duration_model_epochs":          10,                  // int:              継続長推論モデル エポック数
   "duration_model_batch_size":      100,                 // int:              継続長推論モデル バッチサイズ
