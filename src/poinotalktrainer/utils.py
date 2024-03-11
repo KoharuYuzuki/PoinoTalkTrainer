@@ -17,18 +17,18 @@ def compute_seq2seg_len(
   hop_len: int
 ) -> int:
   if (sequence_len >= seg_len) and (hop_len > 0):
-    seguments_len = math.ceil((sequence_len / hop_len) - (seg_len / hop_len) + 1)
+    segments_len = math.ceil((sequence_len / hop_len) - (seg_len / hop_len) + 1)
   else:
-    seguments_len = 1
+    segments_len = 1
 
-  return seguments_len
+  return segments_len
 
 def compute_seg2seq_len(
-  seguments_len: int,
+  segments_len: int,
   seg_len: int,
   hop_len: int
 ) -> int:
-  sequence_len = hop_len * (seguments_len - 1) + seg_len
+  sequence_len = hop_len * (segments_len - 1) + seg_len
   return sequence_len
 
 def seq2seg(
@@ -38,58 +38,58 @@ def seq2seg(
   apply_window: bool = False
 ) -> NDArray:
   sequence_len = len(sequence)
-  seguments_len = compute_seq2seg_len(sequence_len, seg_len, hop_len)
-  seguments = np.zeros(
-    (seguments_len, seg_len, *sequence.shape[1:]),
+  segments_len = compute_seq2seg_len(sequence_len, seg_len, hop_len)
+  segments = np.zeros(
+    (segments_len, seg_len, *sequence.shape[1:]),
     dtype=sequence.dtype
   )
 
-  for i in range(seguments_len):
+  for i in range(segments_len):
     start = hop_len * i
     end = start + seg_len
 
-    segument = sequence[start:end]
-    segument_len = len(segument)
+    segment = sequence[start:end]
+    segment_len = len(segment)
 
-    if segument_len < seg_len:
-      segument = np.concatenate((
-        segument,
+    if segment_len < seg_len:
+      segment = np.concatenate((
+        segment,
         np.zeros(
-          ((seg_len - segument_len), *sequence.shape[1:]),
+          ((seg_len - segment_len), *sequence.shape[1:]),
           dtype=sequence.dtype
         )
       ))
 
-    seguments[i] = segument
+    segments[i] = segment
 
   if apply_window:
-    seguments *= np.hanning(seguments.shape[-1])
+    segments *= np.hanning(segments.shape[-1])
 
-  return seguments
+  return segments
 
 def seg2seq(
-  seguments: NDArray,
+  segments: NDArray,
   seg_len: int,
   hop_len: int,
   adj_overlap_value: bool = False
 ) -> NDArray:
-  seguments_len = len(seguments)
-  sequence_len = compute_seg2seq_len(seguments_len, seg_len, hop_len)
+  segments_len = len(segments)
+  sequence_len = compute_seg2seq_len(segments_len, seg_len, hop_len)
   sequence = np.zeros(
-    (sequence_len, *seguments.shape[2:]),
-    dtype=seguments.dtype
+    (sequence_len, *segments.shape[2:]),
+    dtype=segments.dtype
   )
   adjuster = (hop_len / seg_len) * 2
 
-  for i in range(seguments_len):
+  for i in range(segments_len):
     start = hop_len * i
     end = start + seg_len
-    segument = seguments[i]
+    segment = segments[i]
 
     if adj_overlap_value:
-      segument *= adjuster
+      segment *= adjuster
 
-    sequence[start:end] += segument
+    sequence[start:end] += segment
 
   return sequence
 
@@ -122,15 +122,15 @@ def detect_volume(
   seg_len = int(fs * 0.01)
   hop_len = seg_len // 4
 
-  seguments = seq2seg(wave, seg_len, hop_len, apply_window=True)
-  for segument in seguments:
-    volume = np.max(np.abs(segument))
+  segments = seq2seg(wave, seg_len, hop_len, apply_window=True)
+  for segment in segments:
+    volume = np.max(np.abs(segment))
     if volume < min_volume:
       volume = min_volume
-    segument.fill(volume)
-  seguments *= np.hanning(seg_len)
+    segment.fill(volume)
+  segments *= np.hanning(seg_len)
 
-  sequence = seg2seq(seguments, seg_len, hop_len, adj_overlap_value=True)
+  sequence = seg2seq(segments, seg_len, hop_len, adj_overlap_value=True)
   return sequence[:len(wave)]
 
 def interp_zeros(
@@ -377,14 +377,14 @@ def gen_dataset(
   )
 
   if wav_file_path == None:
-    f0_seguments = None
-    volume_seguments = None
+    f0_segments = None
+    volume_segments = None
 
     if is_mono:
-      accent_seguments = None
+      accent_segments = None
     else:
       accent_array = np.array(padding_before + [x['accent'] for x in label_parsed] + padding_after, dtype=np.float16)
-      accent_seguments = seq2seg(accent_array, sliding_window_len, 1)
+      accent_segments = seq2seg(accent_array, sliding_window_len, 1)
   else:
     wave_fs, wave = wavfile.read(wav_file_path)
     assert wave_fs == fs
@@ -419,8 +419,8 @@ def gen_dataset(
 
     prev_sec = 0
     accents = []
-    f0_seguments = np.zeros((len(durations), f0_envelope_len), dtype=np.float16)
-    volume_seguments = np.zeros((len(durations), volume_envelope_len), dtype=np.float16)
+    f0_segments = np.zeros((len(durations), f0_envelope_len), dtype=np.float16)
+    volume_segments = np.zeros((len(durations), volume_envelope_len), dtype=np.float16)
 
     for i, duration in enumerate(durations):
       start_sec = prev_sec
@@ -429,21 +429,21 @@ def gen_dataset(
       start_index = int(start_sec * fs)
       end_index = int(end_sec * fs)
 
-      f0_segument = f0_envelope[start_index:end_index]
-      f0_segument = resample(f0_segument, f0_envelope_len)
-      f0_seguments[i] = f0_segument
+      f0_segment = f0_envelope[start_index:end_index]
+      f0_segment = resample(f0_segment, f0_envelope_len)
+      f0_segments[i] = f0_segment
 
-      accent = 1 if np.average(f0_segument[f0_segument != 0]) >= f0_envelope_center else 0
+      accent = 1 if np.average(f0_segment[f0_segment != 0]) >= f0_envelope_center else 0
       accents.append(accent)
 
-      volume_segument = volume_envelope[start_index:end_index]
-      volume_segument = resample(volume_segument, volume_envelope_len)
-      volume_seguments[i] = volume_segument
+      volume_segment = volume_envelope[start_index:end_index]
+      volume_segment = resample(volume_segment, volume_envelope_len)
+      volume_segments[i] = volume_segment
 
       prev_sec = end_sec
 
     accent_array = np.array(padding_before + accents + padding_after, dtype=np.float16)
-    accent_seguments = seq2seg(accent_array, sliding_window_len, 1)
+    accent_segments = seq2seg(accent_array, sliding_window_len, 1)
 
   for key in duration_mag_phonemes.keys():
     if not key in phoneme_list:
@@ -461,20 +461,20 @@ def gen_dataset(
 
   durations *= duration_mag_all
 
-  phoneme_number_seguments = seq2seg(
+  phoneme_number_segments = seq2seg(
     np.concatenate((padding_before, phoneme_number, padding_after)),
     sliding_window_len,
     1
   )
 
-  duration_seguments = durations.reshape((-1, 1))
+  duration_segments = durations.reshape((-1, 1))
 
   return (
-    phoneme_number_seguments,
-    accent_seguments,
-    duration_seguments,
-    f0_seguments,
-    volume_seguments
+    phoneme_number_segments,
+    accent_segments,
+    duration_segments,
+    f0_segments,
+    volume_segments
   )
 
 def load_data(
@@ -488,11 +488,11 @@ def load_data(
   assert len(lab_file_paths) == len(wav_file_paths)
   files_len = len(lab_file_paths)
 
-  phoneme_number_seguments_list = []
-  accent_seguments_list         = []
-  duration_seguments_list       = []
-  f0_seguments_list             = []
-  volume_seguments_list         = []
+  phoneme_number_segments_list = []
+  accent_segments_list         = []
+  duration_segments_list       = []
+  f0_segments_list             = []
+  volume_segments_list         = []
 
   for i in tqdm(range(files_len), desc='[data loading]'):
     lab_file_path = lab_file_paths[i]
@@ -519,31 +519,31 @@ def load_data(
       continue
 
     (
-      phoneme_number_seguments,
-      accent_seguments,
-      duration_seguments,
-      f0_seguments,
-      volume_seguments
+      phoneme_number_segments,
+      accent_segments,
+      duration_segments,
+      f0_segments,
+      volume_segments
     ) = dataset
 
-    phoneme_number_seguments_list += list(phoneme_number_seguments)
-    accent_seguments_list         += list(accent_seguments)
-    duration_seguments_list       += list(duration_seguments)
-    f0_seguments_list             += list(f0_seguments)
-    volume_seguments_list         += list(volume_seguments)
+    phoneme_number_segments_list += list(phoneme_number_segments)
+    accent_segments_list         += list(accent_segments)
+    duration_segments_list       += list(duration_segments)
+    f0_segments_list             += list(f0_segments)
+    volume_segments_list         += list(volume_segments)
 
-  phoneme_number_seguments = np.array(phoneme_number_seguments_list, dtype=np.float16)
-  accent_seguments         = np.array(accent_seguments_list, dtype=np.float16)
-  duration_seguments       = np.array(duration_seguments_list, dtype=np.float16)
-  f0_seguments             = np.array(f0_seguments_list, dtype=np.float16)
-  volume_seguments         = np.array(volume_seguments_list, dtype=np.float16)
+  phoneme_number_segments = np.array(phoneme_number_segments_list, dtype=np.float16)
+  accent_segments         = np.array(accent_segments_list, dtype=np.float16)
+  duration_segments       = np.array(duration_segments_list, dtype=np.float16)
+  f0_segments             = np.array(f0_segments_list, dtype=np.float16)
+  volume_segments         = np.array(volume_segments_list, dtype=np.float16)
 
   return {
-    'phoneme_number': phoneme_number_seguments,
-    'accent':         accent_seguments,
-    'duration':       duration_seguments,
-    'f0':             f0_seguments,
-    'volume':         volume_seguments
+    'phoneme_number': phoneme_number_segments,
+    'accent':         accent_segments,
+    'duration':       duration_segments,
+    'f0':             f0_segments,
+    'volume':         volume_segments
   }
 
 def load_json(
