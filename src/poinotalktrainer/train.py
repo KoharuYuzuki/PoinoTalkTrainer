@@ -17,6 +17,8 @@ def train_duration_model(
   layer_mid_units               = config['duration_model_mid_layer_units']
   layer_out_duration_units      = dataset['duration'].shape[1]
 
+  utils.set_seed(config['seed'])
+
   layer_in_phoneme_number = tf.keras.layers.Input(layer_in_phoneme_number_shape, name='in_phoneme_number')
   layer_mid_1             = tf.keras.layers.Dense(layer_mid_units, activation='relu')(layer_in_phoneme_number)
   layer_mid_2             = tf.keras.layers.Dense(layer_mid_units, activation='relu')(layer_mid_1)
@@ -54,6 +56,8 @@ def train_f0_model(
   layer_in_accent_shape         = dataset['accent'].shape[1:]
   layer_mid_units               = config['f0_model_mid_layer_units']
   layer_out_f0_units            = dataset['f0'].shape[1]
+
+  utils.set_seed(config['seed'])
 
   layer_in_phoneme_number = tf.keras.layers.Input(layer_in_phoneme_number_shape, name='in_phoneme_number')
   layer_in_accent         = tf.keras.layers.Input(layer_in_accent_shape, name='in_accent')
@@ -95,6 +99,8 @@ def train_volume_model(
   layer_mid_units               = config['volume_model_mid_layer_units']
   layer_out_volume_units        = dataset['volume'].shape[1]
 
+  utils.set_seed(config['seed'])
+
   layer_in_phoneme_number = tf.keras.layers.Input(layer_in_phoneme_number_shape, name='in_phoneme_number')
   layer_in_accent         = tf.keras.layers.Input(layer_in_accent_shape, name='in_accent')
   layer_concat            = tf.keras.layers.Concatenate()([layer_in_phoneme_number, layer_in_accent])
@@ -122,8 +128,6 @@ def train_volume_model(
 def main():
   config = utils.load_json('config.json')
   dataset = utils.load_data('lab/*.lab', 'wav/*.wav', config)
-
-  utils.set_seed(config['seed'])
 
   train_duration_model(dataset, config)
   train_f0_model(dataset, config)
