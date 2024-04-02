@@ -11,6 +11,71 @@ from glob import glob
 from tqdm import tqdm
 from numpy.typing import NDArray
 
+openjtalk_phoneme_list = [
+  'sil',
+  'pau',
+
+  'a',
+  'i',
+  'u',
+  'e',
+  'o',
+
+  'N',
+
+  'k',
+  'kw',
+  'ky',
+
+  's',
+  'sh',
+
+  't',
+  'ts',
+  'ty',
+
+  'ch',
+
+  'n',
+  'ny',
+
+  'h',
+  'hy',
+
+  'm',
+  'my',
+
+  'y',
+
+  'r',
+  'ry',
+
+  'w',
+
+  'b',
+  'by',
+
+  'd',
+  'dy',
+
+  'g',
+  'gw',
+  'gy',
+
+  'j',
+
+  'v',
+
+  'f',
+
+  'z',
+
+  'p',
+  'py',
+
+  'cl'
+]
+
 def compute_seq2seg_len(
   sequence_len: int,
   seg_len: int,
@@ -284,70 +349,7 @@ def gen_dataset(
   NDArray | None,
   NDArray | None
 ] | None:
-  phoneme_list = [
-    'sil',
-    'pau',
 
-    'a',
-    'i',
-    'u',
-    'e',
-    'o',
-
-    'N',
-
-    'k',
-    'kw',
-    'ky',
-
-    's',
-    'sh',
-
-    't',
-    'ts',
-    'ty',
-
-    'ch',
-
-    'n',
-    'ny',
-
-    'h',
-    'hy',
-
-    'm',
-    'my',
-
-    'y',
-
-    'r',
-    'ry',
-
-    'w',
-
-    'b',
-    'by',
-
-    'd',
-    'dy',
-
-    'g',
-    'gw',
-    'gy',
-
-    'j',
-
-    'v',
-
-    'f',
-
-    'z',
-
-    'p',
-    'py',
-
-    'cl'
-  ]
 
   parsed = parse_label(lab_file_path, is_mono)
   if parsed == None:
@@ -363,7 +365,7 @@ def gen_dataset(
   padding_after  = [invalid_value for _ in range(num_after)]
 
   phoneme_number = np.array(
-    [phoneme_list.index(x['phoneme']) / len(phoneme_list) for x in label_parsed],
+    [openjtalk_phoneme_list.index(x['phoneme']) / len(openjtalk_phoneme_list) for x in label_parsed],
     dtype=np.float16
   )
 
@@ -442,11 +444,11 @@ def gen_dataset(
     accent_segments = seq2seg(accent_array, sliding_window_len, 1)
 
   for key in duration_mag_phonemes.keys():
-    if not key in phoneme_list:
+    if not key in openjtalk_phoneme_list:
       continue
 
-    index = phoneme_list.index(key)
-    number = np.float16(index / len(phoneme_list))
+    index = openjtalk_phoneme_list.index(key)
+    number = np.float16(index / len(openjtalk_phoneme_list))
     mag = duration_mag_phonemes[key]
 
     bool_array = phoneme_number == number
