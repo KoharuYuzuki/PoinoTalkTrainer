@@ -513,6 +513,7 @@ def gen_dataset(
   f0_envelope_mag: float,
   f0_envelope_len: int,
   f0_normalization_max: float,
+  volume_mute_threshold: float,
   volume_envelope_len: int,
   is_mono: bool
 ) -> tuple[
@@ -638,6 +639,8 @@ def gen_dataset(
       accents.append(accent)
 
       volume_segment = volume_envelope[begin_index:end_index]
+      volume_segment = volume_envelope[volume_envelope >= volume_mute_threshold]
+      volume_segment = np.zeros(1, dtype=np.float16) if len(volume_segment) <= 0 else volume_segment
       volume_segment = resample(volume_segment, volume_envelope_len)
       volume_segments[i] = volume_segment
 
@@ -687,6 +690,7 @@ def load_data(
       config['f0_envelope_mag'],
       config['f0_envelope_len'],
       config['f0_normalization_max'],
+      config['volume_mute_threshold'],
       config['volume_envelope_len'],
       True
     )
