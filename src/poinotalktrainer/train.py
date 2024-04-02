@@ -10,8 +10,8 @@ def train_duration_model(
 
   epochs          = config['duration_model_epochs']
   batch_size      = config['duration_model_batch_size']
-  save_dir_for_py = config['duration_model_save_dir_for_py']
-  save_dir_for_js = config['duration_model_save_dir_for_js']
+  save_path_for_py = config['duration_model_save_path_for_py']
+  save_path_for_js = config['duration_model_save_path_for_js']
 
   layer_in_phoneme_number_shape = dataset['phoneme_number'].shape[1:]
   layer_mid_units               = config['duration_model_mid_layer_units']
@@ -36,10 +36,10 @@ def train_duration_model(
     epochs=epochs,
     batch_size=batch_size
   )
-  utils.mkdir(save_dir_for_py)
-  utils.mkdir(save_dir_for_js)
-  model.save(save_dir_for_py)
-  tfjs.converters.save_keras_model(model, save_dir_for_js)
+  utils.mkdir(utils.get_dirname(save_path_for_py))
+  utils.mkdir(save_path_for_js)
+  model.save(save_path_for_py)
+  tfjs.converters.save_keras_model(model, save_path_for_js)
 
 def train_f0_model(
   dataset: dict,
@@ -49,8 +49,8 @@ def train_f0_model(
 
   epochs          = config['f0_model_epochs']
   batch_size      = config['f0_model_batch_size']
-  save_dir_for_py = config['f0_model_save_dir_for_py']
-  save_dir_for_js = config['f0_model_save_dir_for_js']
+  save_path_for_py = config['f0_model_save_path_for_py']
+  save_path_for_js = config['f0_model_save_path_for_js']
 
   layer_in_phoneme_number_shape = dataset['phoneme_number'].shape[1:]
   layer_in_accent_shape         = dataset['accent'].shape[1:]
@@ -78,10 +78,10 @@ def train_f0_model(
     epochs=epochs,
     batch_size=batch_size
   )
-  utils.mkdir(save_dir_for_py)
-  utils.mkdir(save_dir_for_js)
-  model.save(save_dir_for_py)
-  tfjs.converters.save_keras_model(model, save_dir_for_js)
+  utils.mkdir(utils.get_dirname(save_path_for_py))
+  utils.mkdir(save_path_for_js)
+  model.save(save_path_for_py)
+  tfjs.converters.save_keras_model(model, save_path_for_js)
 
 def train_volume_model(
   dataset: dict,
@@ -91,8 +91,8 @@ def train_volume_model(
 
   epochs          = config['volume_model_epochs']
   batch_size      = config['volume_model_batch_size']
-  save_dir_for_py = config['volume_model_save_dir_for_py']
-  save_dir_for_js = config['volume_model_save_dir_for_js']
+  save_path_for_py = config['volume_model_save_path_for_py']
+  save_path_for_js = config['volume_model_save_path_for_js']
 
   layer_in_phoneme_number_shape = dataset['phoneme_number'].shape[1:]
   layer_in_accent_shape         = dataset['accent'].shape[1:]
@@ -120,10 +120,10 @@ def train_volume_model(
     epochs=epochs,
     batch_size=batch_size
   )
-  utils.mkdir(save_dir_for_py)
-  utils.mkdir(save_dir_for_js)
-  model.save(save_dir_for_py)
-  tfjs.converters.save_keras_model(model, save_dir_for_js)
+  utils.mkdir(utils.get_dirname(save_path_for_py))
+  utils.mkdir(save_path_for_js)
+  model.save(save_path_for_py)
+  tfjs.converters.save_keras_model(model, save_path_for_js)
 
 def main():
   config = utils.load_json('config.json')
