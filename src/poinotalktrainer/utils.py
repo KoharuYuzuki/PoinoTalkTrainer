@@ -528,9 +528,9 @@ def gen_dataset(
 
   label_parsed, sil_end_sec, sil_begin_sec = parsed
 
-  invalid_value  = -1
-  num_before     = math.ceil((sliding_window_len - 1) / 2)
-  num_after      = math.floor((sliding_window_len - 1) / 2)
+  invalid_value = -1
+  num_before    = math.ceil((sliding_window_len - 1) / 2)
+  num_after     = math.floor((sliding_window_len - 1) / 2)
 
   padding_before = [invalid_value for _ in range(num_before)]
   padding_after  = [invalid_value for _ in range(num_after)]
