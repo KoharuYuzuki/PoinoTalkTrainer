@@ -1,6 +1,6 @@
 {
   "seed":                            8,                         // int:              シード値
-  "wav_fs":                          24000,                     // int:              WAVファイルのサンプリングレート (Hz)
+  "wav_fs":                          48000,                     // int:              WAVファイルのサンプリングレート (Hz)
   "sliding_window_len":              3,                         // int:              スライディングウィンドウの長さ
 
   "duration_mag_all":                1.0,                       // float:            継続帳の倍率 (すべてに適用)
@@ -24,7 +24,7 @@
 
   "volume_mute_threshold":           0.01,                      // float:            ミュート判定しきい値
   "volume_envelope_len":             32,                        // int:              音量エンベロープの長さ
-  "volume_model_mid_layer_units":    512,                       // int:              音量エンベロープ推論モデル 中間層ユニット数
+  "volume_model_mid_layer_units":    128,                       // int:              音量エンベロープ推論モデル 中間層ユニット数
   "volume_model_epochs":             10,                        // int:              音量エンベロープ推論モデル エポック数
   "volume_model_batch_size":         100,                       // int:              音量エンベロープ推論モデル バッチサイズ
   "volume_model_save_path_for_py":   "model_py/volume.keras",   // str:              音量エンベロープ推論モデル 保存ファイルパス (python)
