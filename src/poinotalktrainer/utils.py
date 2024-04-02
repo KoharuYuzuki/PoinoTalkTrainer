@@ -522,7 +522,7 @@ def gen_dataset(
   NDArray | None,
   NDArray | None
 ] | None:
-  parsed = parse_label(lab_file_path, is_mono)
+  parsed = parse_label(lab_file_path, is_mono=is_mono)
   if parsed == None:
     return None
 
