@@ -7,6 +7,7 @@ PoinoTalk Engineのモデルトレーナー
 次のソフトウェアをインストールします  
 - rye
 - Python 3.10.x
+- OpenJTalk (Pythonで音声合成をする場合のみ)
 
 #### 補足
 - Pythonはryeを使用してインストールしてください
