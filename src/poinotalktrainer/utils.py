@@ -282,10 +282,10 @@ def seq2seg(
   )
 
   for i in range(segments_len):
-    start = hop_len * i
-    end = start + seg_len
+    begin = hop_len * i
+    end = begin + seg_len
 
-    segment = sequence[start:end]
+    segment = sequence[begin:end]
     segment_len = len(segment)
 
     if segment_len < seg_len:
@@ -319,14 +319,14 @@ def seg2seq(
   adjuster = (hop_len / seg_len) * 2
 
   for i in range(segments_len):
-    start = hop_len * i
-    end = start + seg_len
+    begin = hop_len * i
+    end = begin + seg_len
     segment = segments[i]
 
     if adj_overlap_value:
       segment *= adjuster
 
-    sequence[start:end] += segment
+    sequence[begin:end] += segment
 
   return sequence
 
@@ -404,9 +404,9 @@ def parse_label(
     label = file.read()
 
   if is_mono:
-    lab_pattern = re.compile('^(?P<start>[0-9]+) (?P<end>[0-9]+) (?P<phoneme>[a-z]+)', re.I | re.M)
+    lab_pattern = re.compile('^(?P<begin>[0-9]+) (?P<end>[0-9]+) (?P<phoneme>[a-z]+)', re.I | re.M)
   else:
-    lab_pattern = re.compile('^(?P<start>[0-9]+) (?P<end>[0-9]+) [a-z]+\\^[a-z]+-(?P<phoneme>[a-z]+)\\+[a-z]+=[a-z]+\\/A:(?P<accent_pos>-*[0-9|a-z]+)\\+(?P<accent_num_1>[0-9|a-z]+)\\+(?P<accent_num_2>[0-9|a-z]+)', re.M | re.I)
+    lab_pattern = re.compile('^(?P<begin>[0-9]+) (?P<end>[0-9]+) [a-z]+\\^[a-z]+-(?P<phoneme>[a-z]+)\\+[a-z]+=[a-z]+\\/A:(?P<accent_pos>-*[0-9|a-z]+)\\+(?P<accent_num_1>[0-9|a-z]+)\\+(?P<accent_num_2>[0-9|a-z]+)', re.M | re.I)
 
   results = [x.groupdict() for x in re.finditer(lab_pattern, label)]
   min_results_len = 3
@@ -418,19 +418,19 @@ def parse_label(
   label_parsed = []
 
   for result in results:
-    start = int(result['start']) * to_sec
+    begin = int(result['begin']) * to_sec
     end = int(result['end']) * to_sec
     phoneme = result['phoneme'].lower() if result['phoneme'] != 'N' else result['phoneme']
 
     label_parsed.append({
-      'start': start,
+      'begin': begin,
       'end': end,
       'phoneme': phoneme,
       'accent': None
     })
 
   sil_end_sec = label_parsed[0]['end']
-  sil_start_sec = label_parsed[-1]['start']
+  sil_begin_sec = label_parsed[-1]['begin']
 
   results = results[1:-1]
   label_parsed = label_parsed[1:-1]
@@ -497,7 +497,7 @@ def parse_label(
   return (
     label_parsed,
     sil_end_sec,
-    sil_start_sec
+    sil_begin_sec
   )
 
 def gen_dataset(
@@ -527,7 +527,7 @@ def gen_dataset(
   if parsed == None:
     return None
 
-  label_parsed, sil_end_sec, sil_start_sec = parsed
+  label_parsed, sil_end_sec, sil_begin_sec = parsed
 
   invalid_value  = -1
   num_before     = math.ceil((sliding_window_len - 1) / 2)
@@ -542,7 +542,7 @@ def gen_dataset(
   )
 
   durations = np.array(
-    [x['end'] - x['start'] for x in label_parsed],
+    [x['end'] - x['begin'] for x in label_parsed],
     dtype=np.float16
   )
 
@@ -570,7 +570,7 @@ def gen_dataset(
     else:
       wave = wave.astype(np.float16)
 
-    wave = wave[int(sil_end_sec * fs):int(sil_start_sec * fs)]
+    wave = wave[int(sil_end_sec * fs):int(sil_begin_sec * fs)]
 
     f0_envelope = detect_f0(wave, fs, frame_period=50)
     f0_envelope = interp_zeros(f0_envelope)
@@ -593,20 +593,20 @@ def gen_dataset(
     volume_segments = np.zeros((len(durations), volume_envelope_len), dtype=np.float16)
 
     for i, duration in enumerate(durations):
-      start_sec = prev_sec
-      end_sec = start_sec + duration
+      begin_sec = prev_sec
+      end_sec = begin_sec + duration
 
-      start_index = int(start_sec * fs)
+      begin_index = int(begin_sec * fs)
       end_index = int(end_sec * fs)
 
-      f0_segment = f0_envelope[start_index:end_index]
+      f0_segment = f0_envelope[begin_index:end_index]
       f0_segment = resample(f0_segment, f0_envelope_len)
       f0_segments[i] = f0_segment
 
       accent = 1 if np.average(f0_segment[f0_segment != 0]) >= f0_envelope_center else 0
       accents.append(accent)
 
-      volume_segment = volume_envelope[start_index:end_index]
+      volume_segment = volume_envelope[begin_index:end_index]
       volume_segment = resample(volume_segment, volume_envelope_len)
       volume_segments[i] = volume_segment
 
