@@ -535,8 +535,10 @@ def gen_dataset(
   padding_before = [invalid_value for _ in range(num_before)]
   padding_after  = [invalid_value for _ in range(num_after)]
 
-  phoneme_number = np.array(
-    [openjtalk_phoneme_list.index(x['phoneme']) / len(openjtalk_phoneme_list) for x in label_parsed],
+  phonemes = [x['phoneme'] for x in label_parsed]
+
+  phoneme_numbers = np.array(
+    [openjtalk_phoneme_list.index(x) / len(openjtalk_phoneme_list) for x in phonemes],
     dtype=np.float16
   )
 
@@ -545,6 +547,33 @@ def gen_dataset(
     dtype=np.float16
   )
 
+  durations_len = len(durations)
+  durations_orig = durations.copy()
+
+  for key in duration_mag_phonemes.keys():
+    if not key in openjtalk_phoneme_list:
+      continue
+
+    index = openjtalk_phoneme_list.index(key)
+    number = np.float16(index / len(openjtalk_phoneme_list))
+    mag = duration_mag_phonemes[key]
+
+    bool_array = phoneme_numbers == number
+    durations[bool_array] *= mag
+
+  for (index, mag) in duration_mag_indices:
+    durations[index] *= mag
+
+  durations *= duration_mag_all
+
+  phoneme_number_segments = seq2seg(
+    np.concatenate((padding_before, phoneme_numbers, padding_after)),
+    sliding_window_len,
+    1
+  )
+
+  duration_segments = durations.reshape((-1, 1))
+
   if wav_file_path == None:
     f0_segments = None
     volume_segments = None
@@ -552,7 +581,8 @@ def gen_dataset(
     if is_mono:
       accent_segments = None
     else:
-      accent_array = np.array(padding_before + [x['accent'] for x in label_parsed] + padding_after, dtype=np.float16)
+      accents = [x['accent'] for x in label_parsed]
+      accent_array = np.array(padding_before + accents + padding_after, dtype=np.float16)
       accent_segments = seq2seg(accent_array, sliding_window_len, 1)
   else:
     wave_fs, wave = wavfile.read(wav_file_path)
@@ -569,11 +599,13 @@ def gen_dataset(
     else:
       wave = wave.astype(np.float16)
 
-    wave = wave[int(sil_end_sec * fs):int(sil_begin_sec * fs)]
+    sil_end_index = int(fs * sil_end_sec)
+    sil_begin_index = int(fs * sil_begin_sec)
+
+    wave = wave[sil_end_index:sil_begin_index]
 
     f0_envelope = detect_f0(wave, fs, frame_period=50)
     f0_envelope = interp_zeros(f0_envelope)
-
     f0_envelope[f0_envelope != 0] *= f0_envelope_mag
     f0_envelope[f0_envelope != 0] += f0_envelope_offset
     f0_envelope[f0_envelope != 0] /= f0_normalization_max
@@ -586,13 +618,13 @@ def gen_dataset(
 
     volume_envelope = detect_volume(wave, fs)
 
-    prev_sec = 0
+    prev_end = 0
     accents = []
-    f0_segments = np.zeros((len(durations), f0_envelope_len), dtype=np.float16)
-    volume_segments = np.zeros((len(durations), volume_envelope_len), dtype=np.float16)
+    f0_segments = np.zeros((durations_len, f0_envelope_len), dtype=np.float16)
+    volume_segments = np.zeros((durations_len, volume_envelope_len), dtype=np.float16)
 
-    for i, duration in enumerate(durations):
-      begin_sec = prev_sec
+    for i, duration in enumerate(durations_orig):
+      begin_sec = prev_end
       end_sec = begin_sec + duration
 
       begin_index = int(begin_sec * fs)
@@ -609,34 +641,10 @@ def gen_dataset(
       volume_segment = resample(volume_segment, volume_envelope_len)
       volume_segments[i] = volume_segment
 
-      prev_sec = end_sec
+      prev_end = end_sec
 
     accent_array = np.array(padding_before + accents + padding_after, dtype=np.float16)
     accent_segments = seq2seg(accent_array, sliding_window_len, 1)
-
-  for key in duration_mag_phonemes.keys():
-    if not key in openjtalk_phoneme_list:
-      continue
-
-    index = openjtalk_phoneme_list.index(key)
-    number = np.float16(index / len(openjtalk_phoneme_list))
-    mag = duration_mag_phonemes[key]
-
-    bool_array = phoneme_number == number
-    durations[bool_array] *= mag
-
-  for (index, mag) in duration_mag_indices:
-    durations[index] *= mag
-
-  durations *= duration_mag_all
-
-  phoneme_number_segments = seq2seg(
-    np.concatenate((padding_before, phoneme_number, padding_after)),
-    sliding_window_len,
-    1
-  )
-
-  duration_segments = durations.reshape((-1, 1))
 
   return (
     phoneme_number_segments,
