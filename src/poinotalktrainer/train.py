@@ -8,8 +8,8 @@ def train_duration_model(
 ) -> None:
   print('\n[duration model training]\n')
 
-  epochs          = config['duration_model_epochs']
-  batch_size      = config['duration_model_batch_size']
+  epochs           = config['duration_model_epochs']
+  batch_size       = config['duration_model_batch_size']
   save_path_for_py = config['duration_model_save_path_for_py']
   save_path_for_js = config['duration_model_save_path_for_js']
 
@@ -47,8 +47,8 @@ def train_f0_model(
 ) -> None:
   print('\n[f0 model training]\n')
 
-  epochs          = config['f0_model_epochs']
-  batch_size      = config['f0_model_batch_size']
+  epochs           = config['f0_model_epochs']
+  batch_size       = config['f0_model_batch_size']
   save_path_for_py = config['f0_model_save_path_for_py']
   save_path_for_js = config['f0_model_save_path_for_js']
 
@@ -89,8 +89,8 @@ def train_volume_model(
 ) -> None:
   print('\n[volume model training]\n')
 
-  epochs          = config['volume_model_epochs']
-  batch_size      = config['volume_model_batch_size']
+  epochs           = config['volume_model_epochs']
+  batch_size       = config['volume_model_batch_size']
   save_path_for_py = config['volume_model_save_path_for_py']
   save_path_for_js = config['volume_model_save_path_for_js']
 
