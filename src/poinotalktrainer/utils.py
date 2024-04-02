@@ -604,7 +604,7 @@ def gen_dataset(
 
     wave = wave[sil_end_index:sil_begin_index]
 
-    f0_envelope = detect_f0(wave, fs, frame_period=50)
+    f0_envelope = detect_f0(wave, fs)
     f0_envelope = interp_zeros(f0_envelope)
     f0_envelope[f0_envelope != 0] *= f0_envelope_mag
     f0_envelope[f0_envelope != 0] += f0_envelope_offset
