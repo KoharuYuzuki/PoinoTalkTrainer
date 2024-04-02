@@ -1,6 +1,10 @@
 {
+  "speed":                           1.0,                       // float:            合成音声の話速
+  "volume":                          0.5,                       // float:            合成音声の音量
+  "pitch":                           1.0,                       // float:            合成音声のピッチ
   "seed":                            8,                         // int:              シード値
   "wav_fs":                          48000,                     // int:              WAVファイルのサンプリングレート (Hz)
+  "synth_fs":                        24000,                     // int:              合成音声ファイルのサンプリングレート (Hz)
   "sliding_window_len":              3,                         // int:              スライディングウィンドウの長さ
 
   "duration_mag_all":                1.0,                       // float:            継続帳の倍率 (すべてに適用)
@@ -29,4 +33,8 @@
   "volume_model_batch_size":         100,                       // int:              音量エンベロープ推論モデル バッチサイズ
   "volume_model_save_path_for_py":   "model_py/volume.keras",   // str:              音量エンベロープ推論モデル 保存ファイルパス (python)
   "volume_model_save_path_for_js":   "model_js/volume",         // str:              音量エンベロープ推論モデル 保存ディレクトリパス (javascript)
+
+  "openjtalk_bin_path":              "path/to/open_jtalk",      // str:              OpenJTalk 実行ファイルパス
+  "openjtalk_dict_path":             "path/to/dict",            // str:              OpenJTalk 辞書ディレクトリパス
+  "openjtalk_hts_path":              "path/to/htsvoice"         // str:              OpenJTalk HTSボイスファイルパス
 }

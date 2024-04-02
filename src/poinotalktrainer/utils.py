@@ -7,6 +7,7 @@ import re
 import json
 import os
 import random
+import subprocess
 from glob import glob
 from tqdm import tqdm
 from numpy.typing import NDArray
@@ -756,3 +757,166 @@ def get_dirname(
   path: str
 ) -> str:
   return os.path.dirname(path)
+
+def gen_label(
+  text: str,
+  bin_file_path: str,
+  dict_dir_path: str,
+  hts_file_path: str,
+  lab_file_path: str
+) -> None:
+  subprocess.run(
+    F'echo "{text}" | {bin_file_path} -x "{dict_dir_path}" -m "{hts_file_path}" -ot "{lab_file_path}"',
+    capture_output=True,
+    text=True,
+    shell=True
+  )
+
+def synth_voice(
+  duration_segments: NDArray,
+  f0_segments: NDArray,
+  volume_segments: NDArray,
+  phoneme_list: list[str],
+  fs: float,
+  speed: float,
+  volume: float,
+  pitch: float
+) -> NDArray:
+  romaji_list = [x[0] for x in romaji_kana_list]
+  kana_list = [x[1] for x in romaji_kana_list]
+
+  duration_segments /= speed
+  f0_segments *= pitch
+
+  voice = load_json('voice.json')
+  romaji = ''
+  duration_kana = 0
+  kana_units = []
+
+  for i in range(len(duration_segments)):
+    phoneme = phoneme_list[i]
+    duration = duration_segments[i]
+
+    romaji += phoneme
+    duration_kana += duration
+
+    if romaji in romaji_list:
+      kana = kana_list[romaji_list.index(romaji)]
+      phoneme_units = voice['kanas'][kana]
+      duration_rest = duration_kana
+      phonemes = []
+      durations = []
+
+      for phoneme_unit in phoneme_units:
+        phoneme = phoneme_unit['envKey']
+        length = phoneme_unit['len']
+
+        if length == None:
+          duration = duration_rest
+        else:
+          duration = length / speed
+
+        duration_rest -= duration
+
+        if duration_rest < 0:
+          duration_rest = 0
+
+        phonemes.append(phoneme)
+        durations.append(duration)
+
+      kana_units.append({
+        'kana': kana,
+        'phonemes': phonemes,
+        'durations': durations
+      })
+
+      romaji = ''
+      duration_kana = 0
+
+  durations = np.concatenate([x['durations'] for x in kana_units], dtype=np.float16)
+  duration = np.sum(durations)
+  times = np.array([np.sum(durations[:i]) for i in range(len(durations))])
+  duration_ratios = times / duration
+
+  f0_sequence = np.concatenate(
+    [resample(segument, math.ceil(duration_segments[i] * fs) + 1) for i, segument in enumerate(f0_segments)]
+  )
+
+  volume_sequence = np.concatenate(
+    [resample(segument, math.ceil(duration_segments[i] * fs) + 1) for i, segument in enumerate(volume_segments)]
+  )
+
+  seg_len = int(fs * 0.01)
+  hop_len = seg_len // 1
+
+  f0_segs = seq2seg(f0_sequence, seg_len, hop_len)
+  f0_segs = np.average(f0_segs, axis=-1)
+
+  segs_len = len(f0_segs)
+
+  freq_base = np.average(f0_segs)
+  num_freqs = int((fs / 2) / freq_base)
+  freqs = np.array([freq_base * (i + 1) for i in range(num_freqs)]).reshape((-1, 1))
+  freq_mag = f0_segs / freq_base
+  prev_end = 0
+  sin_waves = np.zeros((num_freqs, segs_len, seg_len), dtype=np.float16)
+
+  for i in range(segs_len):
+    begin = prev_end
+    end = begin + (seg_len / fs * freq_mag[i])
+    time = np.linspace(begin, end, num=seg_len + 1)[1:]
+    sin_wave = np.sin(2 * np.pi * freqs * time)
+    prev_end = time[-1]
+    sin_waves[:, i] = sin_wave
+
+  sin_waves = sin_waves.reshape((num_freqs, -1))
+  wave = np.sum(sin_waves, axis=0) / num_freqs
+  wave_len = len(wave)
+
+  seg_len = int(fs * 0.04)
+  hop_len = seg_len // 2
+
+  envelopes = {}
+
+  for key in voice['envelopes']:
+    x_list = []
+    y_list = []
+
+    for x, y in voice['envelopes'][key]:
+      x_list.append(x)
+      y_list.append(math.pow(10, y) - 1)
+
+    new_x = np.linspace(0, fs / 2, num=seg_len // 2)
+    envelope = np.interp(new_x, x_list, y_list)
+    envelopes[key] = np.concatenate((envelope, envelope[::-1]))
+
+  phonemes = [y for x in kana_units for y in x['phonemes']]
+  segments_len = compute_seq2seg_len(wave_len, seg_len, hop_len)
+  filters = np.zeros((segments_len, seg_len), dtype=np.float16)
+
+  for i in range(segments_len):
+    duration_ratio = i / segments_len
+    duration_ratios_filtered = duration_ratios[duration_ratios <= duration_ratio]
+    index = list(duration_ratios).index(duration_ratios_filtered[-1])
+    phoneme = phonemes[index]
+    filters[i] = envelopes[phoneme]
+
+  wave_segs = seq2seg(wave, seg_len, hop_len, True)
+  spec_segs = np.fft.fft(wave_segs)
+  wave_segs = np.fft.ifft(spec_segs * filters).real
+
+  vol_seq = volume_sequence[:wave_len]
+  vol_seq = np.concatenate((vol_seq, np.zeros(wave_len - len(vol_seq))), dtype=np.float16)
+  vol_segs = seq2seg(vol_seq, seg_len, hop_len, True)
+
+  vol_adapter = np.max(np.abs(vol_segs), axis=-1) / np.max(np.abs(wave_segs), axis=-1)
+  vol_adapter[~np.isfinite(vol_adapter)] = 0
+  wave_segs *= vol_adapter.reshape((-1, 1))
+
+  wave = seg2seq(wave_segs, seg_len, hop_len, True)
+  wave_max = np.max(np.abs(wave))
+
+  if wave_max != 0:
+    wave *= volume / wave_max
+
+  return wave
