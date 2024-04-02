@@ -692,7 +692,7 @@ def load_data(
       config['f0_normalization_max'],
       config['volume_mute_threshold'],
       config['volume_envelope_len'],
-      True
+      is_mono=True
     )
 
     if (dataset is None) or any(x is None for x in dataset):
