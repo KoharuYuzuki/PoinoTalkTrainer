@@ -42,6 +42,12 @@ wavディレクトリにWAVファイルを配置します
 $ python ./src/poinotalktrainer/train.py
 ```
 
+### 6. 音声合成
+次のコマンドで音声を合成します  
+```
+$ python ./src/poinotalktrainer/synth.py "読み上げるテキスト" "出力ファイル名.wav"
+```
+
 ## Q&A
 
 ### Q. トレーニング済みモデルのライセンスは？
