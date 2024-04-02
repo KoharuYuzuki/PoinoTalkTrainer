@@ -606,12 +606,12 @@ def gen_dataset(
 
     f0_envelope = detect_f0(wave, fs)
     f0_envelope = interp_zeros(f0_envelope)
-    f0_envelope[f0_envelope != 0] *= f0_envelope_mag
-    f0_envelope[f0_envelope != 0] += f0_envelope_offset
-    f0_envelope[f0_envelope != 0] /= f0_normalization_max
+    f0_envelope *= f0_envelope_mag
+    f0_envelope += f0_envelope_offset
+    f0_envelope /= f0_normalization_max
 
-    f0_envelope_min = np.min(f0_envelope[f0_envelope != 0])
-    f0_envelope_max = np.max(f0_envelope[f0_envelope != 0])
+    f0_envelope_min = np.min(f0_envelope)
+    f0_envelope_max = np.max(f0_envelope)
     f0_envelope_center = f0_envelope_min + ((f0_envelope_max - f0_envelope_min) / 2)
 
     f0_envelope = resample(f0_envelope, len(wave))
