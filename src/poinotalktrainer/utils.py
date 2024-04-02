@@ -354,8 +354,8 @@ def detect_volume(
   wave: NDArray,
   fs: float
 ) -> NDArray:
-  seg_len = int(fs * 0.01)
-  hop_len = seg_len // 4
+  seg_len = int(fs * 0.04)
+  hop_len = seg_len // 2
 
   segments = seq2seg(wave, seg_len, hop_len, apply_window=True)
   for segment in segments:
