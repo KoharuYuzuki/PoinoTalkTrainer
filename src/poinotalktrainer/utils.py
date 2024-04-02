@@ -397,7 +397,8 @@ def interp_zeros(
 
 def parse_label(
   label_file_path: str,
-  is_mono: bool
+  is_mono: bool,
+  include_sil: bool = False
 ) -> tuple | None:
   with open(label_file_path, mode='r', encoding='utf-8') as file:
     label = file.read()
@@ -431,8 +432,9 @@ def parse_label(
   sil_end_sec = label_parsed[0]['end']
   sil_begin_sec = label_parsed[-1]['begin']
 
-  results = results[1:-1]
-  label_parsed = label_parsed[1:-1]
+  if not include_sil:
+    results = results[1:-1]
+    label_parsed = label_parsed[1:-1]
 
   if not is_mono:
     prev_accent_num_1 = 2
