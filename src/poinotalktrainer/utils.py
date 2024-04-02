@@ -751,3 +751,8 @@ def mkdir(
   path: str
 ) -> None:
   os.makedirs(path, exist_ok=True)
+
+def get_dirname(
+  path: str
+) -> str:
+  return os.path.dirname(path)
