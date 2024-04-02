@@ -76,6 +76,30 @@ openjtalk_phoneme_list = [
   'cl'
 ]
 
+voice_phoneme_list = [
+  'a',
+  'i',
+  'u',
+  'e',
+  'o',
+  'k',
+  's',
+  't',
+  'n',
+  'h',
+  'm',
+  'y',
+  'r',
+  'w',
+  'g',
+  'z',
+  'd',
+  'b',
+  'p',
+  'v',
+  'q'
+]
+
 def compute_seq2seg_len(
   sequence_len: int,
   seg_len: int,
