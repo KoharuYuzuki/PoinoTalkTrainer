@@ -21,10 +21,7 @@ def train_duration_model(
   layer_mid_1             = tf.keras.layers.Dense(layer_mid_units, activation='relu')(layer_in_phoneme_number)
   layer_mid_2             = tf.keras.layers.Dense(layer_mid_units, activation='relu')(layer_mid_1)
   layer_mid_3             = tf.keras.layers.Dense(layer_mid_units, activation='relu')(layer_mid_2)
-  layer_mid_4             = tf.keras.layers.Dense(layer_mid_units, activation='relu')(layer_mid_3)
-  layer_mid_5             = tf.keras.layers.Dense(layer_mid_units, activation='relu')(layer_mid_4)
-  layer_mid_6             = tf.keras.layers.Dense(layer_mid_units, activation='relu')(layer_mid_5)
-  layer_out_duration      = tf.keras.layers.Dense(layer_out_duration_units, activation='relu', name='out_duration')(layer_mid_6)
+  layer_out_duration      = tf.keras.layers.Dense(layer_out_duration_units, activation='relu', name='out_duration')(layer_mid_3)
 
   model = tf.keras.Model(
     [layer_in_phoneme_number],
@@ -64,10 +61,7 @@ def train_f0_model(
   layer_mid_1             = tf.keras.layers.Dense(layer_mid_units, activation='relu')(layer_concat)
   layer_mid_2             = tf.keras.layers.Dense(layer_mid_units, activation='relu')(layer_mid_1)
   layer_mid_3             = tf.keras.layers.Dense(layer_mid_units, activation='relu')(layer_mid_2)
-  layer_mid_4             = tf.keras.layers.Dense(layer_mid_units, activation='relu')(layer_mid_3)
-  layer_mid_5             = tf.keras.layers.Dense(layer_mid_units, activation='relu')(layer_mid_4)
-  layer_mid_6             = tf.keras.layers.Dense(layer_mid_units, activation='relu')(layer_mid_5)
-  layer_out_f0            = tf.keras.layers.Dense(layer_out_f0_units, activation='relu', name='out_f0')(layer_mid_6)
+  layer_out_f0            = tf.keras.layers.Dense(layer_out_f0_units, activation='relu', name='out_f0')(layer_mid_3)
 
   model = tf.keras.Model(
     [layer_in_phoneme_number, layer_in_accent],
@@ -107,10 +101,7 @@ def train_volume_model(
   layer_mid_1             = tf.keras.layers.Dense(layer_mid_units, activation='relu')(layer_concat)
   layer_mid_2             = tf.keras.layers.Dense(layer_mid_units, activation='relu')(layer_mid_1)
   layer_mid_3             = tf.keras.layers.Dense(layer_mid_units, activation='relu')(layer_mid_2)
-  layer_mid_4             = tf.keras.layers.Dense(layer_mid_units, activation='relu')(layer_mid_3)
-  layer_mid_5             = tf.keras.layers.Dense(layer_mid_units, activation='relu')(layer_mid_4)
-  layer_mid_6             = tf.keras.layers.Dense(layer_mid_units, activation='relu')(layer_mid_5)
-  layer_out_volume        = tf.keras.layers.Dense(layer_out_volume_units, activation='relu', name='out_volume')(layer_mid_6)
+  layer_out_volume        = tf.keras.layers.Dense(layer_out_volume_units, activation='relu', name='out_volume')(layer_mid_3)
 
   model = tf.keras.Model(
     [layer_in_phoneme_number, layer_in_accent],
