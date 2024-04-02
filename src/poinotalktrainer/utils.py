@@ -345,11 +345,10 @@ def detect_f0(
   fs: float,
   frame_period: int = 5
 ) -> NDArray:
-  wave_f64 = wave.astype(np.float64)
-  f0, t = pw.dio(wave_f64, fs, frame_period=frame_period)
-  f0 = pw.stonemask(wave_f64, f0, t, fs)
-  f0 = f0.astype(wave.dtype)
-  return f0
+  x = wave.astype(np.float64)
+  _f0, t = pw.dio(x, fs, frame_period=frame_period)
+  f0 = pw.stonemask(x, _f0, t, fs)
+  return f0.astype(wave.dtype)
 
 def detect_volume(
   wave: NDArray,
