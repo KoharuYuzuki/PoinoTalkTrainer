@@ -14,65 +14,65 @@ from numpy.typing import NDArray
 openjtalk_phoneme_list = [
   'sil',
   'pau',
-
+  None,
   'a',
   'i',
   'u',
   'e',
   'o',
-
+  None,
   'N',
-
+  None,
   'k',
   'kw',
   'ky',
-
+  None,
   's',
   'sh',
-
+  None,
   't',
   'ts',
   'ty',
-
+  None,
   'ch',
-
+  None,
   'n',
   'ny',
-
+  None,
   'h',
   'hy',
-
+  None,
   'm',
   'my',
-
+  None,
   'y',
-
+  None,
   'r',
   'ry',
-
+  None,
   'w',
-
+  None,
   'b',
   'by',
-
+  None,
   'd',
   'dy',
-
+  None,
   'g',
   'gw',
   'gy',
-
+  None,
   'j',
-
+  None,
   'v',
-
+  None,
   'f',
-
+  None,
   'z',
-
+  None,
   'p',
   'py',
-
+  None,
   'cl'
 ]
 
